@@ -38,7 +38,10 @@ class HotelModel(db.Model):                           # Creating a DB object
 class ReservationModel(db.Model):
     __tablename__ =  'booking'
     id = db.Column(db.Integer, primary_key=True, autoincrement = True)
-    customer_name = db.Column(db.String, nullable =False)
+    first_name = db.Column(db.String, nullable =False)
+    last_name = db.Column(db.String, nullable =False)
+    e_mail = db.Column(db.String, nullable =False)
+    phone_no = db.Column(db.String, nullable =False)
     booked_room = db.Column(db.Integer, nullable = False)
     hotel_id = db.Column(db.Integer, db.ForeignKey('hotels.id'))
     relation = db.relationship("HotelModel")
@@ -46,13 +49,13 @@ class ReservationModel(db.Model):
 
     
   #  def __init__(self, name, bookedroom, hotelid, hotelname):
-  #      self.customer_name = name
+  #      self.first_name = name
    #     self.booked_room = bookedroom
     #    self.hotel_id = hotelid
      #   self.hotel_name = hotelname
         
     def json(self):
-        return {'id': self.id,'Customer Name': self.customer_name, 'Hotel Name': self.hotel_name, 'Booked Rooms' : self.booked_room, 'Hotel ID' : self.hotel_id }
+        return {'id': self.id,'First Name': self.first_name,'Last Name': self.last_name,'E mail': self.e_mail,'Phone Number': self.phone_no, 'Hotel Name': self.hotel_name, 'Booked Rooms' : self.booked_room, 'Hotel ID' : self.hotel_id }
     
     @classmethod
     def find_by_name(cls, name):
@@ -102,6 +105,7 @@ resource_fields = {                   # To make your data output serializable
     'facility2' : fields.String,
     'facility3' : fields.String,
     'avaliable_rooms' : fields.Integer,
+    'flag' : fields.Integer,
 
 }
 
@@ -109,9 +113,10 @@ hotelb_put_args = reqparse.RequestParser()
 hotelb_put_args.add_argument("hname",type=str, help = "entry the name of the hotel")
 hotelb_put_args.add_argument("hid", type=int, help = "entry hotel id")
 hotelb_put_args.add_argument("broom",type=int, help = "entry booked room", required = True)
-hotelb_put_args.add_argument("cname",type=str, help = "entry customer name", required = True)
-
-
+hotelb_put_args.add_argument("f_name",type=str, help = "entry customer name", required = True)
+hotelb_put_args.add_argument("l_name",type=str, help = "entry customer name", required = True)
+hotelb_put_args.add_argument("e_mail",type=str, help = "entry customer name", required = True)
+hotelb_put_args.add_argument("ph_no",type=str, help = "entry customer name", required = True)
 
 def abort_if_Hotel_does_not_exist(HotelID):    # to avoid  crashin if the Hotel id  does not exist
     if HotelID not in Hotels:
@@ -135,7 +140,7 @@ class HotelBooking(Resource):                   # Class created to handle get re
         result1 = ReservationModel.find_by_name(name)
         if result1:
              abort(409, message = "Accomodation is booked .. ")
-        booking = ReservationModel(customer_name = args['cname'],booked_room = args['broom'],hotel_id = result.id ,hotel_name = name)
+        booking = ReservationModel(first_name = args['f_name'],last_name = args['l_name'],e_mail = args['e_mail'],phone_no = args['ph_no'],booked_room = args['broom'],hotel_id = result.id ,hotel_name = name)
         if result.avaliable_rooms >= args['broom']:
             result.avaliable_rooms = result.avaliable_rooms - args['broom']
         else:
@@ -213,7 +218,8 @@ class HotelsAdd(Resource):
 class HotelList(Resource):
     @marshal_with(resource_fields)
     def get(self):
-        result = HotelModel.query.filter_by(flag = 1).first()
+        result = HotelModel.query.filter_by(flag=1).all()
+    
         return result
 
 
