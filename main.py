@@ -2,7 +2,7 @@
 
 
 
-from datetime import date
+
 from email.policy import default
 from flask import Flask 
 from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort 
@@ -77,20 +77,20 @@ class ReservationModel(db.Model):
 
 db.create_all()            # do it once to initialize it 
 
-Hotel_put_agrs = reqparse.RequestParser()
+Hotel_put_agrs = reqparse.RequestParser()               # To get the desired input
 Hotel_put_agrs.add_argument("name", type=str,help = "Name of the Hotel is required", required = True)
-Hotel_put_agrs.add_argument("star", type=int, help = "Views of the Hotel")
+Hotel_put_agrs.add_argument("star", type=int, help = "Stars for the Hotel")
 Hotel_put_agrs.add_argument("price", type=int , help = "price on the Hotel")
 Hotel_put_agrs.add_argument("city", type=str , help = "Name of the City")
 Hotel_put_agrs.add_argument("country", type=str , help = "Name of the country")
-Hotel_put_agrs.add_argument("hoteli", type=str , help = "Hotel of the hotel")
+Hotel_put_agrs.add_argument("hoteli", type=str , help = "Image of the hotel")
 Hotel_put_agrs.add_argument("facility1", type=str , help = "write facility1")
 Hotel_put_agrs.add_argument("facility2", type=str , help = "write facility2")
 Hotel_put_agrs.add_argument("facility3", type=str , help = "write facility3")
 Hotel_put_agrs.add_argument("avaliable_rooms", type=int, help = "Write rooms avaliable")
 
-names = { "tim" : {"age":19 , "gender": "male" } , 
-          "bilal" : {"age" : 20 , "gender": "male"}  }
+#names = { "tim" : {"age":19 , "gender": "male" } , 
+#          "bilal" : {"age" : 20 , "gender": "male"}  }
 Hotels = {}                          # Dictionary
 
 resource_fields = {                   # To make your data output serializable
@@ -113,10 +113,10 @@ hotelb_put_args = reqparse.RequestParser()
 hotelb_put_args.add_argument("hname",type=str, help = "entry the name of the hotel")
 hotelb_put_args.add_argument("hid", type=int, help = "entry hotel id")
 hotelb_put_args.add_argument("broom",type=int, help = "entry booked room", required = True)
-hotelb_put_args.add_argument("f_name",type=str, help = "entry customer name", required = True)
-hotelb_put_args.add_argument("l_name",type=str, help = "entry customer name", required = True)
-hotelb_put_args.add_argument("e_mail",type=str, help = "entry customer name", required = True)
-hotelb_put_args.add_argument("ph_no",type=str, help = "entry customer name", required = True)
+hotelb_put_args.add_argument("f_name",type=str, help = "entry customer first name", required = True)
+hotelb_put_args.add_argument("l_name",type=str, help = "entry customer last name", required = True)
+hotelb_put_args.add_argument("e_mail",type=str, help = "entry customer email address", required = True)
+hotelb_put_args.add_argument("ph_no",type=str, help = "entry customer phone number", required = True)
 
 def abort_if_Hotel_does_not_exist(HotelID):    # to avoid  crashin if the Hotel id  does not exist
     if HotelID not in Hotels:
@@ -130,7 +130,7 @@ class HotelBooking(Resource):                   # Class created to handle get re
     def get(Self, name):
         result = ReservationModel.find_by_name(name)
         if not result:
-            abort(404, message= "Could not find Reservation with that ID")
+            abort(404, message= "Could not find Reservation with this ID")
         return result.json()
     
     def put(Self, name):
@@ -160,20 +160,16 @@ class HotelBooking(Resource):                   # Class created to handle get re
         return booking.json()
 
     def delete(Self,name):
-         item = ReservationModel.find_by_name(name)
-         if item:
-            item.delete_from_db()
+         result = ReservationModel.find_by_name(name)
+         if result:
+            result.flag = 1
+            db.session.add(result)
+            db.session.commit()
+            result.delete_from_db()
 
-         return {'message': 'Item deleted.'}
+         return {'message': 'Hotel Reserbation deleted.'}
 
          
-
-
-
-       
-    
-    def post (Self):
-        return {"data": "posted"}
 
 class HotelsAdd(Resource):
    
@@ -181,7 +177,7 @@ class HotelsAdd(Resource):
     def get(self, HotelID):
         result = HotelModel.query.filter_by(id=HotelID).filter_by(flag = 1).first()
         if not result:
-            abort(404, message= "Could not find video with that ID")
+            abort(404, message= "Could not find hotel with this ID")
         return result
         #abort_if_Hotel_does_not_exist(HotelID)
         #return Hotels[HotelID]
@@ -205,7 +201,7 @@ class HotelsAdd(Resource):
       #  abort_if_Hotel_does_not_exist(HotelID)
       result = HotelModel.query.filter_by(id=HotelID).first()
       if not result:
-            abort(404, message = "record not found")
+            abort(404, message = "hotel record not found")
         
       db.session.delete(result)
       db.session.commit()
